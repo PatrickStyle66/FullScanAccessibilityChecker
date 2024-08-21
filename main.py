@@ -4,22 +4,34 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import pyperclip
 driver = webdriver.Edge()
 AccessDriver = webdriver.Edge()
+htmlDriver = webdriver.Edge()
 ScoresTable = {'Page':[],'Score':[]}
-def getPageScore(site):
+flag = True
+def getPageScore(html):
     AccessDriver.get('https://accessmonitor.acessibilidade.gov.pt/')
-    search = WebDriverWait(AccessDriver, 10).until(EC.presence_of_element_located((By.ID, "url")))
+    HtmlMode = WebDriverWait(AccessDriver, 10).until(EC.presence_of_element_located((By.XPATH, '//button[contains(@data-rr-ui-event-key,"tab2")]')))
+    HtmlMode.click()
+    search = WebDriverWait(AccessDriver, 10).until(EC.presence_of_element_located((By.ID, "html")))
     search.clear()
-    search.send_keys(site)
-    search.send_keys(Keys.RETURN)
+    if flag:
+        pyperclip.copy(driver.page_source)
+    else:
+        pyperclip.copy(html)
+    search.send_keys(Keys.CONTROL, 'v')
+    #WebDriverWait(AccessDriver, 60)
+    sendButton = WebDriverWait(AccessDriver, 10).until(EC.presence_of_element_located((By.XPATH, '//button[contains(@id,"btn-html")]')))
+    sendButton.click()
     try:
         score = WebDriverWait(AccessDriver, 60).until(
             EC.presence_of_element_located((By.TAG_NAME, "svg")))
        # pageName = AccessDriver.find_element(By.CLASS_NAME,"resume_info_about_uri d-flex flex-column gap-4")
         #print(pageName.text)
         score = str(score.text).split('\n')[1]
-        ScoresTable['Page'].append("teste")
+        if not flag:
+            ScoresTable['Page'].append(htmlDriver.title)
         print(f'score da página: {score}')
         return float(score)
     except:
@@ -53,6 +65,8 @@ def getWebsiteScores(site):
     print(linkList)
     for item in linkList:
        try:
+           global flag
+           flag = False
            link = item.get_attribute('href')
            print(link)
            if link in unique:
@@ -62,7 +76,9 @@ def getWebsiteScores(site):
                if social in str(link).lower():
                    skip = True
            if not skip:
-             result = getPageScore(link)
+             htmlDriver.get(link)
+             html = htmlDriver.page_source
+             result = getPageScore(html)
              unique.append(link)
              ScoresTable['Score'].append(result)
              print(result)
@@ -79,6 +95,7 @@ def getWebsiteScores(site):
         finalScore = points / count
     print(f"Média: {finalScore}")
     print(f"Páginas Verificadas: {count}")
+    print(ScoresTable)
     df = pd.DataFrame(data=ScoresTable)
     df2 = df.dropna()
     df2.to_csv('WebsiteScores.csv')
