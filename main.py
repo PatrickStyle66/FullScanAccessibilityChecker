@@ -5,12 +5,14 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import pyperclip
+import streamlit as st
 driver = webdriver.Edge()
 driver.set_window_position(-10000,0)
 driver.switch_to.new_window('tab')
 driver.switch_to.new_window('tab')
-ScoresTable = {'Page':[],'Score':[]}
+ScoresTable = {'Página':[],'Pontuação':[]}
 flag = True
+count, finalScore = 0, 0
 def getPageScore(html):
     driver.switch_to.window(driver.window_handles[1])
     driver.get('https://accessmonitor.acessibilidade.gov.pt/')
@@ -36,13 +38,14 @@ def getPageScore(html):
         score = str(score.text).split('\n')[1]
         if not flag:
             driver.switch_to.window(driver.window_handles[2])
-            ScoresTable['Page'].append(driver.title)
+            ScoresTable['Página'].append(driver.title)
         print(f'score da página: {score}')
         return float(score)
     except:
         return 0
 
 def getWebsiteScores(site):
+    global count, finalScore
     print("Iniciando Análise...")
     socialMedia = ['instagram', 'facebook', 'tiktok', 'youtube', 'youtu.be', 'cadastro.museus.gov.br',
                    'museus.cultura.gov.br', '.png', '.jpg', 'linkedin', 'mailto', 'wikipedia']
@@ -56,12 +59,11 @@ def getWebsiteScores(site):
         print("Site não encontrado.")
         return
 
-    ScoresTable['Page'].append('Início')
+    ScoresTable['Página'].append('Início')
     points = 0
-    count = 0
     result = getPageScore(site)
     driver.switch_to.window(driver.window_handles[0])
-    ScoresTable['Score'].append(result)
+    ScoresTable['Pontuação'].append(result)
     unique.append(site)
     print(result)
     if result != 0:
@@ -89,7 +91,7 @@ def getWebsiteScores(site):
              result = getPageScore(html)
              driver.switch_to.window(driver.window_handles[0])
              unique.append(link)
-             ScoresTable['Score'].append(result)
+             ScoresTable['Pontuação'].append(result)
              print(result)
              if result != 0:
                 points += result
@@ -109,7 +111,22 @@ def getWebsiteScores(site):
     df2 = df.dropna()
     df2.to_csv('WebsiteScores.csv')
     driver.quit()
+    return df2
 
+def main():
+    st.title("Verificador de Acessibilidade")
+    st.header("Digite o site a ser analisado")
+    site = st.text_input("ex: https://site .com .br")
+    with st.spinner("Analisando Páginas..."):
+        results = getWebsiteScores(site)
+        if count > 0:
+            st.header(f"Páginas Analisadas: {count}")
+        if finalScore >= 8:
+            st.header(f"Média geral: :green[{finalScore:.2f}]")
+        elif finalScore >= 6:
+            st.header(f"Média geral: :orange[{finalScore:.2f}]")
+        else:
+            st.header(f"Média geral: :red[{finalScore:.2f}]")
+        results
 
-site = input("digite a url a ser analisada:")
-getWebsiteScores(site)
+main()
