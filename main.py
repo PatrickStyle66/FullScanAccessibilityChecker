@@ -13,6 +13,7 @@ driver.switch_to.new_window('tab')
 ScoresTable = {'Página':[],'Pontuação':[]}
 flag = True
 count, finalScore = 0, 0
+placeholder = st.empty()
 def getPageScore(html):
     driver.switch_to.window(driver.window_handles[1])
     driver.get('https://accessmonitor.acessibilidade.gov.pt/')
@@ -45,7 +46,7 @@ def getPageScore(html):
         return 0
 
 def getWebsiteScores(site):
-    global count, finalScore
+    global count, finalScore, placeholder
     print("Iniciando Análise...")
     socialMedia = ['instagram', 'facebook', 'tiktok', 'youtube', 'youtu.be', 'cadastro.museus.gov.br',
                    'museus.cultura.gov.br', '.png', '.jpg', 'linkedin', 'mailto', 'wikipedia']
@@ -57,6 +58,7 @@ def getWebsiteScores(site):
         print(f'domínio real: {site}')
     except:
         print("Site não encontrado.")
+        driver.quit()
         return
 
     ScoresTable['Página'].append('Início')
@@ -73,6 +75,7 @@ def getWebsiteScores(site):
     linkList = driver.find_elements(By.XPATH,f'//a[contains(@href, "{site}") or contains(@href, "#/") or contains(@href, "html") or contains(@href, "/view/") or contains(@href, "jsp") or starts-with(@href, "/")]')
     print(linkList)
     for item in linkList:
+       placeholder.markdown(f"### :blue-background[Páginas analisadas: {count} :hourglass_flowing_sand: ]")
        try:
            global flag
            flag = False
@@ -114,19 +117,24 @@ def getWebsiteScores(site):
     return df2
 
 def main():
+    global placeholder
     st.title("Verificador de Acessibilidade")
     st.header("Digite o site a ser analisado")
     site = st.text_input("ex: https://site .com .br")
-    with st.spinner("Analisando Páginas..."):
-        results = getWebsiteScores(site)
-        if count > 0:
-            st.header(f"Páginas Analisadas: {count}")
-        if finalScore >= 8:
-            st.header(f"Média geral: :green[{finalScore:.2f}]")
-        elif finalScore >= 6:
-            st.header(f"Média geral: :orange[{finalScore:.2f}]")
-        else:
-            st.header(f"Média geral: :red[{finalScore:.2f}]")
-        results
+    if site:
+        with st.spinner("Analisando Páginas..."):
+            results = getWebsiteScores(site)
+            if count > 0:
+                st.header(f"Páginas Totais Analisadas: {count} :white_check_mark:")
+            if finalScore != 0:
+                if finalScore >= 8:
+                    st.header(f"Média geral: :green[{finalScore:.2f}]")
+                elif finalScore >= 6:
+                    st.header(f"Média geral: :orange[{finalScore:.2f}]")
+                else:
+                    st.header(f"Média geral: :red[{finalScore:.2f}]")
+                st.write(results)
+                placeholder.empty()
+
 
 main()
