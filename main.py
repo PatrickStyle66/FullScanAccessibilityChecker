@@ -17,7 +17,7 @@ count, finalScore = 0, 0
 placeholder = st.empty()
 imagesList = []
 def getPageScore(html):
-    practiceList = []
+    #practiceList = []
     driver.switch_to.window(driver.window_handles[1])
     driver.get('https://accessmonitor.acessibilidade.gov.pt/')
     HtmlMode = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//button[contains(@data-rr-ui-event-key,"tab2")]')))
@@ -40,11 +40,13 @@ def getPageScore(html):
        # pageName = AccessDriver.find_element(By.CLASS_NAME,"resume_info_about_uri d-flex flex-column gap-4")
         #print(pageName.text)
         score = str(score.text).split('\n')[1]
-        resultslist = WebDriverWait(driver, 10).until(
-            EC.presence_of_all_elements_located((By.TAG_NAME, "tr")))
-        for element in resultslist:
-            practiceList.append(element.screenshot_as_png)
-        imagesList.append(practiceList)
+        driver.execute_script("window.scrollTo(0, 400);")
+        results = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, '//div[contains(@class,"d-flex flex-row justify-content-between size_and_table_container")]'))).screenshot_as_png
+        imagesList.append(results)
+        #for element in resultslist:
+        #    practiceList.append(element.screenshot_as_png)
+        # imagesList.append(practiceList)
         if not flag:
             driver.switch_to.window(driver.window_handles[2])
             ScoresTable['Página'].append(driver.title)
@@ -129,7 +131,8 @@ def main():
     st.title("Verificador de Acessibilidade")
     st.header("Digite o site a ser analisado")
     site = st.text_input("ex: https://site .com .br")
-    if site:
+    print(site)
+    if site and site != '':
         with st.spinner("Analisando Páginas..."):
             results = getWebsiteScores(site)
             if count > 0:
@@ -143,6 +146,9 @@ def main():
                     st.header(f"Média geral: :red[{finalScore:.2f}]")
                 st.write(results)
                 placeholder.empty()
+                #sliderPlaceholder = st.empty()
+    if imagesList:
+        st.image(imagesList)
 
 
 main()
