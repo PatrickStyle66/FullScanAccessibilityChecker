@@ -8,6 +8,7 @@ import pyperclip
 import streamlit as st
 driver = webdriver.Edge()
 driver.set_window_position(-10000,0)
+driver.set_window_size(1920,1080)
 driver.switch_to.new_window('tab')
 driver.switch_to.new_window('tab')
 ScoresTable = {'Página':[],'Pontuação':[]}
@@ -49,7 +50,7 @@ def getWebsiteScores(site):
     global count, finalScore, placeholder
     print("Iniciando Análise...")
     socialMedia = ['instagram', 'facebook', 'tiktok', 'youtube', 'youtu.be', 'cadastro.museus.gov.br',
-                   'museus.cultura.gov.br', '.png', '.jpg', 'linkedin', 'mailto', 'wikipedia']
+                   'museus.cultura.gov.br', '.png', '.jpg', 'linkedin', 'mailto', 'wikipedia','.pdf']
     unique = []
     try:
         driver.switch_to.window(driver.window_handles[0])
