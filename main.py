@@ -15,8 +15,8 @@ ScoresTable = {'Página':[],'Pontuação':[]}
 flag = True
 count, finalScore = 0, 0
 placeholder = st.empty()
-imagesList = []
-overviewList= []
+imagesList = {}
+overviewList= {}
 def getPageScore(html):
     #practiceList = []
     driver.switch_to.window(driver.window_handles[1])
@@ -45,16 +45,20 @@ def getPageScore(html):
         overview = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located(
                 (By.XPATH, '//table[contains(@class,"table table-bordereds table-alternative ")]'))).screenshot_as_png
-        overviewList.append(overview)
         results = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, '//table[contains(@class,"table table_primary ")]'))).screenshot_as_png
-        imagesList.append(results)
+            EC.presence_of_element_located((By.XPATH, '//table[contains(@class,"table table_primary ")]//tbody//tr'))).screenshot_as_png
         #for element in resultslist:
         #    practiceList.append(element.screenshot_as_png)
         # imagesList.append(practiceList)
-        if not flag:
+        if flag:
+            ScoresTable['Página'].append('Início')
+            imagesList['Início'] = results
+            overviewList['Início'] = overview
+        else:
             driver.switch_to.window(driver.window_handles[2])
             ScoresTable['Página'].append(driver.title)
+            imagesList[driver.title] = results
+            overviewList[driver.title] = overview
         print(f'score da página: {score}')
         return float(score)
     except:
@@ -76,7 +80,6 @@ def getWebsiteScores(site):
         driver.quit()
         return
 
-    ScoresTable['Página'].append('Início')
     points = 0
     result = getPageScore(site)
     driver.switch_to.window(driver.window_handles[0])
@@ -135,7 +138,7 @@ def getWebsiteScores(site):
 def imageSlider():
     sliderPlaceholder = st.empty()
     with sliderPlaceholder.container():
-        image = st.slider("página",0,count-1)
+        image = st.selectbox("Página",imagesList.keys())
         st.image(overviewList[image])
         st.image(imagesList[image])
 
