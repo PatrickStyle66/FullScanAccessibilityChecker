@@ -16,6 +16,7 @@ flag = True
 count, finalScore = 0, 0
 placeholder = st.empty()
 imagesList = []
+overviewList= []
 def getPageScore(html):
     #practiceList = []
     driver.switch_to.window(driver.window_handles[1])
@@ -40,9 +41,13 @@ def getPageScore(html):
        # pageName = AccessDriver.find_element(By.CLASS_NAME,"resume_info_about_uri d-flex flex-column gap-4")
         #print(pageName.text)
         score = str(score.text).split('\n')[1]
-        driver.execute_script("window.scrollTo(0, 400);")
+        driver.execute_script("window.scrollTo(0, 1200);")
+        overview = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located(
+                (By.XPATH, '//table[contains(@class,"table table-bordereds table-alternative ")]'))).screenshot_as_png
+        overviewList.append(overview)
         results = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, '//div[contains(@class,"d-flex flex-row justify-content-between size_and_table_container")]'))).screenshot_as_png
+            EC.presence_of_element_located((By.XPATH, '//table[contains(@class,"table table_primary ")]'))).screenshot_as_png
         imagesList.append(results)
         #for element in resultslist:
         #    practiceList.append(element.screenshot_as_png)
@@ -126,6 +131,14 @@ def getWebsiteScores(site):
     driver.quit()
     return df2
 
+@st.fragment
+def imageSlider():
+    sliderPlaceholder = st.empty()
+    with sliderPlaceholder.container():
+        image = st.slider("página",0,count-1)
+        st.image(overviewList[image])
+        st.image(imagesList[image])
+
 def main():
     global placeholder
     st.title("Verificador de Acessibilidade")
@@ -146,9 +159,10 @@ def main():
                     st.header(f"Média geral: :red[{finalScore:.2f}]")
                 st.write(results)
                 placeholder.empty()
-                #sliderPlaceholder = st.empty()
+                st.header("Relatório por página")
+
     if imagesList:
-        st.image(imagesList)
+        imageSlider()
 
 
 main()
