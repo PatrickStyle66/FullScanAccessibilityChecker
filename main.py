@@ -74,7 +74,7 @@ def getWebsiteScores(site):
     global count, finalScore, placeholder
     print("Iniciando Análise...")
     socialMedia = ['instagram', 'facebook', 'tiktok', 'youtube', 'youtu.be', 'cadastro.museus.gov.br',
-                   'museus.cultura.gov.br', '.png', '.jpg', 'linkedin', 'mailto', 'wikipedia','.pdf']
+                   'museus.cultura.gov.br', '.png', '.jpg', 'linkedin', 'mailto', 'wikipedia','.pdf','twitter']
     unique = []
     try:
         driver.switch_to.window(driver.window_handles[0])
