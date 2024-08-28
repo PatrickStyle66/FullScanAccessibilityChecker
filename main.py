@@ -4,6 +4,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.action_chains import ActionChains
 import pyperclip
 import streamlit as st
 driver = webdriver.Edge()
@@ -17,8 +18,9 @@ count, finalScore = 0, 0
 placeholder = st.empty()
 imagesList = {}
 overviewList= {}
+actions = ActionChains(driver)
 def getPageScore(html):
-    #practiceList = []
+    practicesList = []
     driver.switch_to.window(driver.window_handles[1])
     driver.get('https://accessmonitor.acessibilidade.gov.pt/')
     HtmlMode = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//button[contains(@data-rr-ui-event-key,"tab2")]')))
@@ -41,24 +43,28 @@ def getPageScore(html):
        # pageName = AccessDriver.find_element(By.CLASS_NAME,"resume_info_about_uri d-flex flex-column gap-4")
         #print(pageName.text)
         score = str(score.text).split('\n')[1]
-        driver.execute_script("window.scrollTo(0, 1200);")
-        overview = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located(
-                (By.XPATH, '//table[contains(@class,"table table-bordereds table-alternative ")]'))).screenshot_as_png
+        #driver.execute_script("window.scrollTo(0, 1200);")
         results = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, '//table[contains(@class,"table table_primary ")]//tbody//tr'))).screenshot_as_png
+            EC.presence_of_all_elements_located((By.XPATH, '//table[contains(@class,"table table_primary ")]//tbody//tr')))
+        for element in results:
+            actions.move_to_element(element).perform()
+            practicesList.append(element.screenshot_as_png)
         #for element in resultslist:
         #    practiceList.append(element.screenshot_as_png)
         # imagesList.append(practiceList)
         if flag:
             ScoresTable['Página'].append('Início')
-            imagesList['Início'] = results
-            overviewList['Início'] = overview
+            imagesList['Início'] = practicesList
+
         else:
             driver.switch_to.window(driver.window_handles[2])
-            ScoresTable['Página'].append(driver.title)
-            imagesList[driver.title] = results
-            overviewList[driver.title] = overview
+            if driver.title in imagesList.keys():
+                ScoresTable['Página'].append(driver.title + ' b')
+                imagesList[driver.title + ' b'] = practicesList
+            else:
+                ScoresTable['Página'].append(driver.title)
+                imagesList[driver.title] = practicesList
+
         print(f'score da página: {score}')
         return float(score)
     except:
@@ -139,8 +145,8 @@ def imageSlider():
     sliderPlaceholder = st.empty()
     with sliderPlaceholder.container():
         image = st.selectbox("Página",imagesList.keys())
-        st.image(overviewList[image])
-        st.image(imagesList[image])
+        for element in imagesList[image]:
+            st.image(element)
 
 def main():
     global placeholder
@@ -149,7 +155,7 @@ def main():
     site = st.text_input("ex: https://site .com .br")
     print(site)
     if site and site != '':
-        with st.spinner("Analisando Páginas..."):
+        with st.spinner("Analisando Páginas...  (Pode demorar até 1 min por página)"):
             results = getWebsiteScores(site)
             if count > 0:
                 st.header(f"Páginas Totais Analisadas: {count} :white_check_mark:")
