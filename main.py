@@ -7,6 +7,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 import pyperclip
 import streamlit as st
+from random_word import RandomWords
+r = RandomWords()
 driver = webdriver.Edge()
 driver.set_window_position(-10000,0)
 driver.set_window_size(1920,1080)
@@ -59,8 +61,9 @@ def getPageScore(html):
         else:
             driver.switch_to.window(driver.window_handles[2])
             if driver.title in imagesList.keys():
-                ScoresTable['Página'].append(driver.title + ' b')
-                imagesList[driver.title + ' b'] = practicesList
+                rand = r.get_random_word()
+                ScoresTable['Página'].append(driver.title + rand)
+                imagesList[driver.title + rand] = practicesList
             else:
                 ScoresTable['Página'].append(driver.title)
                 imagesList[driver.title] = practicesList
@@ -69,6 +72,24 @@ def getPageScore(html):
         return float(score)
     except:
         return 0
+
+def getLinkFromElement(item):
+    try:
+        return item.get_attribute("href")
+    except:
+        pass
+
+#def searchThroughWebsite(linkList,site):
+#    for link in linkList:
+#        driver.get(link)
+#        elementList = driver.find_elements(By.XPATH,
+#                                           f'//a[contains(@href, "{site}") or contains(@href, "#/") or contains(@href, "html") or contains(@href, "/view/") or contains(@href, "jsp") or starts-with(@href, "/")]')
+#        print(elementList)
+#        referenceList = list(set(map(getLinkFromElement, elementList)))
+#        referenceList.extend(linkList)
+#        referenceList = list(set(referenceList))
+#        linkList.extend(referenceList)
+#    return linkList
 
 def getWebsiteScores(site):
     global count, finalScore, placeholder
@@ -96,14 +117,18 @@ def getWebsiteScores(site):
         points += result
         count += 1
     WebDriverWait(driver, 0.1)
-    linkList = driver.find_elements(By.XPATH,f'//a[contains(@href, "{site}") or contains(@href, "#/") or contains(@href, "html") or contains(@href, "/view/") or contains(@href, "jsp") or starts-with(@href, "/")]')
-    print(linkList)
+    elementList = driver.find_elements(By.XPATH,f'//a[contains(@href, "{site}") or contains(@href, "#/") or contains(@href, "html") or contains(@href, "/view/") or contains(@href, "jsp") or starts-with(@href, "/")]')
+    print(elementList)
+    linkList = list(set(map(getLinkFromElement,elementList)))
+    driver.switch_to.window(driver.window_handles[2])
+    #linkList = searchThroughWebsite(linkList,site)
+    driver.switch_to.window(driver.window_handles[0])
     for item in linkList:
        placeholder.markdown(f"### :blue-background[Páginas analisadas: {count} :hourglass_flowing_sand: ]")
        try:
            global flag
            flag = False
-           link = item.get_attribute('href')
+           link = item
            print(link)
            if link in unique:
                continue
