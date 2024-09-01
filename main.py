@@ -79,17 +79,22 @@ def getLinkFromElement(item):
     except:
         pass
 
-#def searchThroughWebsite(linkList,site):
-#    for link in linkList:
-#        driver.get(link)
-#        elementList = driver.find_elements(By.XPATH,
-#                                           f'//a[contains(@href, "{site}") or contains(@href, "#/") or contains(@href, "html") or contains(@href, "/view/") or contains(@href, "jsp") or starts-with(@href, "/")]')
-#        print(elementList)
-#        referenceList = list(set(map(getLinkFromElement, elementList)))
-#        referenceList.extend(linkList)
-#        referenceList = list(set(referenceList))
-#        linkList.extend(referenceList)
-#    return linkList
+def searchThroughWebsite(linkList,site):
+    for link in linkList:
+        try:
+            driver.get(link)
+        except:
+            continue
+        elementList =  WebDriverWait(driver, 10).until(
+            EC.presence_of_all_elements_located((By.XPATH, f'//a[contains(@href, "{site}") or contains(@href, "#/") or contains(@href, "html") or contains(@href, "/view/") or contains(@href, "jsp") or starts-with(@href, "/")]')))
+        referenceList = list(set(map(getLinkFromElement, elementList)))
+        referenceList.extend(linkList)
+        referenceList = list(set(referenceList))
+        print(referenceList)
+        for item in referenceList:
+           if item not in linkList:
+               linkList.append(item)
+    return linkList
 
 def getWebsiteScores(site):
     global count, finalScore, placeholder
@@ -121,7 +126,7 @@ def getWebsiteScores(site):
     print(elementList)
     linkList = list(set(map(getLinkFromElement,elementList)))
     driver.switch_to.window(driver.window_handles[2])
-    #linkList = searchThroughWebsite(linkList,site)
+    linkList = searchThroughWebsite(linkList,site)
     driver.switch_to.window(driver.window_handles[0])
     for item in linkList:
        placeholder.markdown(f"### :blue-background[Páginas analisadas: {count} :hourglass_flowing_sand: ]")
