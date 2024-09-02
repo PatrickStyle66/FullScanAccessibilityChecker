@@ -8,6 +8,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 import pyperclip
 import streamlit as st
 from random_word import RandomWords
+import requests
 r = RandomWords()
 driver = webdriver.Edge()
 driver.set_window_position(-10000,0)
@@ -82,18 +83,25 @@ def getLinkFromElement(item):
 def searchThroughWebsite(linkList,site):
     for link in linkList:
         try:
-            driver.get(link)
+            req = requests.get(link)
         except:
             continue
-        elementList =  WebDriverWait(driver, 10).until(
-            EC.presence_of_all_elements_located((By.XPATH, f'//a[contains(@href, "{site}") or contains(@href, "#/") or contains(@href, "html") or contains(@href, "/view/") or contains(@href, "jsp") or starts-with(@href, "/")]')))
-        referenceList = list(set(map(getLinkFromElement, elementList)))
-        referenceList.extend(linkList)
-        referenceList = list(set(referenceList))
-        print(referenceList)
-        for item in referenceList:
-           if item not in linkList:
-               linkList.append(item)
+        if req.status_code == 200:
+            driver.get(link)
+            try:
+                elementList = WebDriverWait(driver, 10).until(
+                    EC.presence_of_all_elements_located((By.XPATH,
+                                                         f'//a[contains(@href, "{site}") or contains(@href, "#/") or contains(@href, "html") or contains(@href, "/view/") or contains(@href, "jsp") or starts-with(@href, "/")]')))
+            except:
+                continue
+            referenceList = list(set(map(getLinkFromElement, elementList)))
+            referenceList.extend(linkList)
+            referenceList = list(set(referenceList))
+            print(referenceList)
+            for item in referenceList:
+                if item not in linkList:
+                    linkList.append(item)
+
     return linkList
 
 def getWebsiteScores(site):
