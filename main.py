@@ -21,8 +21,10 @@ count, finalScore,pageCount = 0, 0, 0
 placeholder = st.empty()
 imagesList = {}
 overviewList= {}
+scoreList = {}
 actions = ActionChains(driver)
 def getPageScore(html):
+    global Screenshots
     practicesList = []
     driver.switch_to.window(driver.window_handles[1])
     driver.get('https://accessmonitor.acessibilidade.gov.pt/')
@@ -43,6 +45,9 @@ def getPageScore(html):
     try:
         score = WebDriverWait(driver, 60).until(
             EC.presence_of_element_located((By.TAG_NAME, "svg")))
+        scoreImage = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//div[contains(@class,"d-flex flex-row mt-5 mb-5 justify-content-between container_uri_chart")]')))
+        actions.move_to_element(scoreImage).perform()
+        scoreImage = scoreImage.screenshot_as_png
        # pageName = AccessDriver.find_element(By.CLASS_NAME,"resume_info_about_uri d-flex flex-column gap-4")
         #print(pageName.text)
         score = str(score.text).split('\n')[1]
@@ -58,20 +63,23 @@ def getPageScore(html):
         if flag:
             ScoresTable['Página'].append('Início')
             imagesList['Início'] = practicesList
-
+            scoreList['Início'] = scoreImage
         else:
             driver.switch_to.window(driver.window_handles[2])
             if driver.title in imagesList.keys():
                 rand = r.get_random_word()
                 ScoresTable['Página'].append(driver.title + rand)
                 imagesList[driver.title + rand] = practicesList
+                scoreList[driver.title + rand] = scoreImage
             else:
                 ScoresTable['Página'].append(driver.title)
                 imagesList[driver.title] = practicesList
+                scoreList[driver.title] = scoreImage
 
         print(f'score da página: {score}')
         return float(score)
-    except:
+    except Exception as error:
+        print(error)
         return 0
 
 def getLinkFromElement(item):
@@ -184,9 +192,11 @@ def getWebsiteScores(site):
 
 @st.fragment
 def imageSlider():
+    global Screenshots
     sliderPlaceholder = st.empty()
     with sliderPlaceholder.container():
         image = st.selectbox("Página",imagesList.keys())
+        st.image(scoreList[image])
         for element in imagesList[image]:
             st.image(element)
 
