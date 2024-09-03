@@ -7,9 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 import pyperclip
 import streamlit as st
-from random_word import RandomWords
 import requests
-r = RandomWords()
 driver = webdriver.Edge()
 driver.set_window_position(-10000,0)
 driver.set_window_size(1920,1080)
@@ -23,6 +21,7 @@ imagesList = {}
 overviewList= {}
 scoreList = {}
 infoList = {}
+repeatList = []
 actions = ActionChains(driver)
 def getPageScore(html):
     global Screenshots
@@ -79,12 +78,14 @@ def getPageScore(html):
         else:
             driver.switch_to.window(driver.window_handles[2])
             if driver.title in imagesList.keys():
-                rand = r.get_random_word()
-                ScoresTable['Página'].append(driver.title + rand)
-                imagesList[driver.title + rand] = practicesList
-                scoreList[driver.title + rand] = scoreImage
-                overviewList[driver.title + rand] = tableList
-                infoList[driver.title + rand] = info
+                repeatList.append(driver.title)
+                repeat = repeatList.count(driver.title) + 1
+                repeatTitle =f'{driver.title}-{repeat}'
+                ScoresTable['Página'].append(repeatTitle)
+                imagesList[repeatTitle] = practicesList
+                scoreList[repeatTitle] = scoreImage
+                overviewList[repeatTitle] = tableList
+                infoList[repeatTitle] = info
             else:
                 ScoresTable['Página'].append(driver.title)
                 imagesList[driver.title] = practicesList
