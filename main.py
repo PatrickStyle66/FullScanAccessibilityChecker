@@ -22,10 +22,13 @@ placeholder = st.empty()
 imagesList = {}
 overviewList= {}
 scoreList = {}
+infoList = {}
 actions = ActionChains(driver)
 def getPageScore(html):
     global Screenshots
     practicesList = []
+    tableList = []
+    info = []
     driver.switch_to.window(driver.window_handles[1])
     driver.get('https://accessmonitor.acessibilidade.gov.pt/')
     HtmlMode = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//button[contains(@data-rr-ui-event-key,"tab2")]')))
@@ -48,22 +51,31 @@ def getPageScore(html):
         scoreImage = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//div[contains(@class,"d-flex flex-row mt-5 mb-5 justify-content-between container_uri_chart")]')))
         actions.move_to_element(scoreImage).perform()
         scoreImage = scoreImage.screenshot_as_png
-       # pageName = AccessDriver.find_element(By.CLASS_NAME,"resume_info_about_uri d-flex flex-column gap-4")
-        #print(pageName.text)
         score = str(score.text).split('\n')[1]
-        #driver.execute_script("window.scrollTo(0, 1200);")
         results = WebDriverWait(driver, 10).until(
             EC.presence_of_all_elements_located((By.XPATH, '//table[contains(@class,"table table_primary ")]//tbody//tr')))
+        infoElements = WebDriverWait(driver, 10).until(EC.presence_of_all_elements_located((By.XPATH, '//div[contains(@class,"size_container d-flex flex-column gap-4")]//div[contains(@class,"d-flex flex-column")]')))
+        for element in infoElements:
+            actions.move_to_element(element).perform()
+            info.append(element.screenshot_as_png)
+        title = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//tr[contains(@class,"mobile_table")]')))
+        actions.move_to_element(title).perform()
+        title = title.screenshot_as_png
+        tableList.append(title)
+        tableElements = WebDriverWait(driver, 10).until(
+            EC.presence_of_all_elements_located((By.XPATH, '//table[contains(@class,"table table-bordereds table-alternative ")]//tbody//tr')))
+        for element in tableElements:
+            actions.move_to_element(element).perform()
+            tableList.append(element.screenshot_as_png)
         for element in results:
             actions.move_to_element(element).perform()
             practicesList.append(element.screenshot_as_png)
-        #for element in resultslist:
-        #    practiceList.append(element.screenshot_as_png)
-        # imagesList.append(practiceList)
         if flag:
             ScoresTable['Página'].append('Início')
             imagesList['Início'] = practicesList
             scoreList['Início'] = scoreImage
+            overviewList['Início'] = tableList
+            infoList['Início'] = info
         else:
             driver.switch_to.window(driver.window_handles[2])
             if driver.title in imagesList.keys():
@@ -71,10 +83,14 @@ def getPageScore(html):
                 ScoresTable['Página'].append(driver.title + rand)
                 imagesList[driver.title + rand] = practicesList
                 scoreList[driver.title + rand] = scoreImage
+                overviewList[driver.title + rand] = tableList
+                infoList[driver.title + rand] = info
             else:
                 ScoresTable['Página'].append(driver.title)
                 imagesList[driver.title] = practicesList
                 scoreList[driver.title] = scoreImage
+                overviewList[driver.title] = tableList
+                infoList[driver.title] = info
 
         print(f'score da página: {score}')
         return float(score)
@@ -195,10 +211,18 @@ def imageSlider():
     global Screenshots
     sliderPlaceholder = st.empty()
     with sliderPlaceholder.container():
-        image = st.selectbox("Página",imagesList.keys())
-        st.image(scoreList[image])
+        image = st.selectbox("Página", imagesList.keys())
+        left_co, cent_co, last_co = st.columns(3)
+        with left_co:
+            for element in infoList[image]:
+                st.image(element)
+        with cent_co:
+            st.image(scoreList[image],use_column_width=False)
+        for element in overviewList[image]:
+            st.image(element)
         for element in imagesList[image]:
             st.image(element)
+
 
 def main():
     global placeholder
