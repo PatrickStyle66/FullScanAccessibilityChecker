@@ -119,7 +119,7 @@ def searchThroughWebsite(linkList,site):
             try:
                 elementList = WebDriverWait(driver, 1).until(
                     EC.presence_of_all_elements_located((By.XPATH,
-                                                         f'//a[contains(@href, "{site}") or contains(@href, "#/") or contains(@href, "/view/") or contains(@href, "jsp") or starts-with(@href, "/")]')))
+                                                         f'//a[contains(@href, "{site}") or contains(@href, "#/") or contains(@href, "jsp") or starts-with(@href, "/")]')))
             except:
                 continue
             referenceList = list(set(map(getLinkFromElement, elementList)))
