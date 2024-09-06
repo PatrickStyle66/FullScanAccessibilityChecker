@@ -122,18 +122,14 @@ def searchThroughWebsite(linkList,site):
                                                          f'//a[contains(@href, "{site}") or contains(@href, "#/") or contains(@href, "jsp") or starts-with(@href, "/")]')))
             except:
                 continue
-            referenceList = list(set(map(getLinkFromElement, elementList)))
-            referenceList.extend(linkList)
-            referenceList = list(set(referenceList))
+            referenceList = set(map(getLinkFromElement, elementList))
+            difference = set(linkList)
+            referenceList = list(referenceList - difference)
             for item in referenceList:
-                skip = False
                 for reject in RejectList:
                     if reject in item.lower():
-                        skip = True
-                if skip:
-                    continue
-                if item not in linkList:
-                    linkList.append(item)
+                        referenceList.remove(item)
+            linkList.extend(referenceList)
             print(f'links encontrados:{len(referenceList)} links assimilados: {len(linkList)}')
             pageCount = len(linkList)
             placeholder.markdown(f"### :blue-background[Páginas encontradas: {pageCount + 1}     Páginas analisadas: {count} :hourglass_flowing_sand: ]")
