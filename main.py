@@ -110,6 +110,13 @@ def searchThroughWebsite(linkList,site):
     RejectList = ['instagram', 'facebook', 'tiktok', 'youtube', 'youtu.be', 'cadastro.museus.gov.br',
                    'museus.cultura.gov.br', '.png', '.jpg', 'linkedin', 'mailto', 'wikipedia', '.pdf', 'twitter','.webp']
     for link in linkList:
+        skip = False
+        for reject in RejectList:
+            if reject in link.lower():
+                linkList.remove(link)
+                skip =True
+        if skip:
+            continue
         try:
             req = requests.get(link)
         except:
@@ -130,9 +137,9 @@ def searchThroughWebsite(linkList,site):
                     if reject in item.lower():
                         referenceList.remove(item)
             linkList.extend(referenceList)
-            print(f'links encontrados:{len(referenceList)} links assimilados: {len(linkList)}')
+            print(f'links novos encontrados:{len(referenceList)} links totais assimilados: {len(linkList)}')
             pageCount = len(linkList)
-            placeholder.markdown(f"### :blue-background[Páginas encontradas: {pageCount + 1}     Páginas analisadas: {count} :hourglass_flowing_sand: ]")
+            placeholder.markdown(f"### :blue-background[Procurando Páginas: {pageCount + 1}  :mag_right: ]")
     return linkList
 
 def getWebsiteScores(site):
