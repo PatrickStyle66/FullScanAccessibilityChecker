@@ -108,21 +108,22 @@ def getLinkFromElement(item):
 def searchThroughWebsite(linkList,site):
     global placeholder,pageCount
     RejectList = ['instagram', 'facebook', 'tiktok', 'youtube', 'youtu.be', 'cadastro.museus.gov.br',
-                   'museus.cultura.gov.br', '.png', '.jpg', 'linkedin', 'mailto', 'wikipedia', '.pdf', 'twitter','.webp']
+                   'museus.cultura.gov.br', '.png', '.jpg', 'linkedin', 'mailto', 'wikipedia', '.pdf', 'twitter','.webp','x.com']
     for link in linkList:
-        skip = False
-        for reject in RejectList:
-            if reject in link.lower():
-                linkList.remove(link)
-                skip =True
-        if skip:
-            continue
         try:
             req = requests.get(link)
         except:
             continue
         if req.status_code == 200 and link != site:
             driver.get(link)
+            site = driver.current_url
+            skip = False
+            for reject in RejectList:
+                if reject in site.lower():
+                    linkList.remove(link)
+                    skip = True
+            if skip:
+                continue
             try:
                 elementList = WebDriverWait(driver, 1).until(
                     EC.presence_of_all_elements_located((By.XPATH,
