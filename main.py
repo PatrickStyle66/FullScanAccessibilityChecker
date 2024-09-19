@@ -109,18 +109,20 @@ def searchThroughWebsite(linkList,site):
     global placeholder,pageCount
     RejectList = ['instagram', 'facebook', 'tiktok', 'youtube', 'youtu.be', 'cadastro.museus.gov.br',
                    'museus.cultura.gov.br', '.png', '.jpg', 'linkedin', 'mailto', 'wikipedia', '.pdf', 'twitter','.webp','x.com']
+    removeList = []
     for link in linkList:
         try:
             req = requests.get(link)
+            print(req.status_code)
         except:
             continue
         if req.status_code == 200 and link != site:
             driver.get(link)
-            site = driver.current_url
+            current_url = driver.current_url
             skip = False
             for reject in RejectList:
-                if reject in site.lower():
-                    linkList.remove(link)
+                if reject in current_url.lower():
+                    removeList.append(link)
                     skip = True
             if skip:
                 continue
@@ -139,8 +141,10 @@ def searchThroughWebsite(linkList,site):
                         referenceList.remove(item)
             linkList.extend(referenceList)
             print(f'links novos encontrados:{len(referenceList)} links totais assimilados: {len(linkList)}')
-            pageCount = len(linkList)
+            pageCount = len(linkList) - len(removeList)
             placeholder.markdown(f"### :blue-background[Procurando Páginas: {pageCount + 1}  :mag_right: ]")
+    for item in removeList:
+        linkList.remove(item)
     return linkList
 
 def getWebsiteScores(site):
@@ -175,7 +179,7 @@ def getWebsiteScores(site):
     linkList = searchThroughWebsite(linkList,site)
     driver.switch_to.window(driver.window_handles[0])
     for item in linkList:
-       placeholder.markdown(f"### :blue-background[Páginas encontradas: {pageCount + 1}     Páginas analisadas: {count} :hourglass_flowing_sand: ]")
+       placeholder.markdown(f"### :blue-background[Páginas encontradas: {len(linkList) + 1}     Páginas analisadas: {count} :hourglass_flowing_sand: ]")
        try:
            global flag
            flag = False
