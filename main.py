@@ -24,7 +24,6 @@ infoList = {}
 repeatList = []
 actions = ActionChains(driver)
 def getPageScore(html):
-    global Screenshots
     practicesList = []
     tableList = []
     info = []
@@ -148,7 +147,7 @@ def searchThroughWebsite(linkList,site):
     return linkList
 
 def getWebsiteScores(site):
-    global count, finalScore, placeholder
+    global count, finalScore, placeholder, AnalyzedSite
     print("Iniciando Análise...")
 
     unique = []
@@ -190,6 +189,7 @@ def getWebsiteScores(site):
            driver.switch_to.window(driver.window_handles[2])
            driver.get(link)
            html = driver.page_source
+           AnalyzedSite.markdown(f"### Analisando {link}")
            result = getPageScore(html)
            driver.switch_to.window(driver.window_handles[0])
            unique.append(link)
@@ -217,7 +217,6 @@ def getWebsiteScores(site):
 
 @st.fragment
 def imageSlider():
-    global Screenshots
     sliderPlaceholder = st.empty()
     with sliderPlaceholder.container():
         image = st.selectbox("Página", imagesList.keys())
@@ -234,10 +233,12 @@ def imageSlider():
 
 
 def main():
-    global placeholder
+    global placeholder, AnalyzedSite
     st.title("Verificador de Acessibilidade")
-    st.header("Digite o site a ser analisado")
-    site = st.text_input("ex: https://site .com .br")
+    message = st.empty()
+    message.header("Digite o site a ser analisado")
+    AnalyzedSite = st.empty()
+    site = AnalyzedSite.text_input("ex: https://site .com .br")
     print(site)
     if site and site != '':
         with st.spinner("Analisando Páginas...  "):
@@ -253,6 +254,8 @@ def main():
                     st.header(f"Média geral: :red[{finalScore:.2f}]")
                 st.write(results)
                 placeholder.empty()
+                message.header("Recarregue a página para uma nova consulta")
+                AnalyzedSite.empty()
                 st.header("Relatório por página")
 
     if imagesList:
