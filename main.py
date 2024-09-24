@@ -8,11 +8,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 import pyperclip
 import streamlit as st
 import requests
-driver = webdriver.Edge()
-driver.set_window_position(-10000,0)
-driver.set_window_size(1920,1080)
-driver.switch_to.new_window('tab')
-driver.switch_to.new_window('tab')
+
 ScoresTable = {'Página':[],'Pontuação':[], 'Link':[]}
 flag = True
 count, finalScore,pageCount = 0, 0, 0
@@ -22,8 +18,9 @@ overviewList= {}
 scoreList = {}
 infoList = {}
 repeatList = []
-actions = ActionChains(driver)
+
 def getPageScore(html,site = ''):
+    global driver, actions
     practicesList = []
     tableList = []
     info = []
@@ -99,9 +96,9 @@ def getPageScore(html,site = ''):
         print(f'score da página: {score}')
         return float(score)
     except Exception as error:
-        print(error)
         if flag:
             return -1
+        print(error)
         return 0
 
 def getLinkFromElement(item):
@@ -111,7 +108,7 @@ def getLinkFromElement(item):
         pass
 
 def searchThroughWebsite(linkList,site):
-    global placeholder,pageCount,AnalyzedSite
+    global placeholder,pageCount,AnalyzedSite, driver
     RejectList = ['instagram', 'facebook', 'tiktok', 'youtube', 'youtu.be', '.png', '.jpg','.jpeg',
                   'linkedin', 'mailto', 'wikipedia', '.pdf', 'twitter','.webp','x.com','google']
     removeList = []
@@ -156,7 +153,7 @@ def searchThroughWebsite(linkList,site):
     return linkList
 
 def getWebsiteScores(site):
-    global count, finalScore, placeholder, AnalyzedSite
+    global count, finalScore, placeholder, AnalyzedSite, driver
     print("Iniciando Análise...")
 
     unique = []
@@ -167,6 +164,7 @@ def getWebsiteScores(site):
         print(f'domínio real: {site}')
     except:
         print("Site não encontrado.")
+        AnalyzedSite.markdown("### Site não encontrado, Recarregue a página e tente novamente")
         driver.quit()
         return
 
@@ -245,7 +243,7 @@ def imageSlider():
 
 
 def main():
-    global placeholder, AnalyzedSite
+    global placeholder, AnalyzedSite, driver, actions
     st.title("Verificador de Acessibilidade")
     message = st.empty()
     message.header("Digite o site a ser analisado")
@@ -253,6 +251,12 @@ def main():
     site = AnalyzedSite.text_input("ex: https://site .com .br")
     print(site)
     if site and site != '':
+        driver = webdriver.Edge()
+        driver.set_window_position(-10000, 0)
+        driver.set_window_size(1920, 1080)
+        driver.switch_to.new_window('tab')
+        driver.switch_to.new_window('tab')
+        actions = ActionChains(driver)
         with st.spinner("Analisando Páginas...  "):
             results = getWebsiteScores(site)
             if results is int:
