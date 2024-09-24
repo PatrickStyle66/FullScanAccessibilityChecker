@@ -96,6 +96,8 @@ def getPageScore(html):
         return float(score)
     except Exception as error:
         print(error)
+        if flag:
+            return -1
         return 0
 
 def getLinkFromElement(item):
@@ -105,9 +107,9 @@ def getLinkFromElement(item):
         pass
 
 def searchThroughWebsite(linkList,site):
-    global placeholder,pageCount
-    RejectList = ['instagram', 'facebook', 'tiktok', 'youtube', 'youtu.be', 'cadastro.museus.gov.br',
-                   'museus.cultura.gov.br', '.png', '.jpg', 'linkedin', 'mailto', 'wikipedia', '.pdf', 'twitter','.webp','x.com']
+    global placeholder,pageCount,AnalyzedSite
+    RejectList = ['instagram', 'facebook', 'tiktok', 'youtube', 'youtu.be', '.png', '.jpg','.jpeg',
+                  'linkedin', 'mailto', 'wikipedia', '.pdf', 'twitter','.webp','x.com','google']
     removeList = []
     for link in linkList:
         try:
@@ -126,6 +128,7 @@ def searchThroughWebsite(linkList,site):
             if skip:
                 continue
             try:
+                AnalyzedSite.markdown(f"### procurando mais páginas em {link}")
                 elementList = WebDriverWait(driver, 1).until(
                     EC.presence_of_all_elements_located((By.XPATH,
                                                          f'//a[contains(@href, "{site}") or contains(@href, "#/") or contains(@href, "jsp") or starts-with(@href, "/")]')))
@@ -162,7 +165,10 @@ def getWebsiteScores(site):
         return
 
     points = 0
+    AnalyzedSite.markdown(f"### Analisando página inicial {site}")
     result = getPageScore(site)
+    if result == -1:
+        return result
     driver.switch_to.window(driver.window_handles[0])
     unique.append(site)
     print(result)
@@ -243,20 +249,23 @@ def main():
     if site and site != '':
         with st.spinner("Analisando Páginas...  "):
             results = getWebsiteScores(site)
-            if count > 0:
-                st.header(f"Páginas Totais Analisadas: {count} :white_check_mark:")
-            if finalScore != 0:
-                if finalScore >= 8:
-                    st.header(f"Média geral: :green[{finalScore:.2f}]")
-                elif finalScore >= 6:
-                    st.header(f"Média geral: :orange[{finalScore:.2f}]")
-                else:
-                    st.header(f"Média geral: :red[{finalScore:.2f}]")
-                st.write(results)
-                placeholder.empty()
-                message.header("Recarregue a página para uma nova consulta")
-                AnalyzedSite.empty()
-                st.header("Relatório por página")
+            if results is int:
+                st.header('Não foi possível analisar o site devido a um erro no access monitor. Recarregue a página e tente outro site')
+            else:
+                if count > 0:
+                    st.header(f"Páginas Totais Analisadas: {count} :white_check_mark:")
+                if finalScore != 0:
+                    if finalScore >= 8:
+                        st.header(f"Média geral: :green[{finalScore:.2f}]")
+                    elif finalScore >= 6:
+                        st.header(f"Média geral: :orange[{finalScore:.2f}]")
+                    else:
+                        st.header(f"Média geral: :red[{finalScore:.2f}]")
+                    st.write(results)
+                    placeholder.empty()
+                    message.header("Recarregue a página para uma nova consulta")
+                    AnalyzedSite.empty()
+                    st.header("Relatório por página")
 
     if imagesList:
         imageSlider()
