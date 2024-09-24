@@ -110,7 +110,7 @@ def getLinkFromElement(item):
 def searchThroughWebsite(linkList,site):
     global placeholder,pageCount,AnalyzedSite, driver
     RejectList = ['instagram', 'facebook', 'tiktok', 'youtube', 'youtu.be', '.png', '.jpg','.jpeg',
-                  'linkedin', 'mailto', 'wikipedia', '.pdf', 'twitter','.webp','x.com','google']
+                  'linkedin', 'mailto', 'wikipedia', '.pdf', 'twitter','.webp','x.com','google','.mp3']
     removeList = []
     for link in linkList:
         try:
@@ -121,35 +121,35 @@ def searchThroughWebsite(linkList,site):
         if req.status_code == 200 and link != site:
             driver.get(link)
             current_url = driver.current_url
-            skip = False
-            for reject in RejectList:
-                if reject in current_url.lower():
-                    removeList.append(link)
-                    skip = True
             if site not in current_url:
-                continue
-            if skip:
+                removeList.append(link)
                 continue
             try:
                 AnalyzedSite.markdown(f"### procurando mais páginas em {link}")
                 elementList = WebDriverWait(driver, 1).until(
                     EC.presence_of_all_elements_located((By.XPATH,
-                                                         f'//a[contains(@href, "{site}") or contains(@href, "#/") or contains(@href, "jsp") or starts-with(@href, "/")]')))
+                                                         f'//a[(contains(@href, "{site}") or contains(@href, "#/") or contains(@href, "jsp") or starts-with(@href, "/")) and not(contains(@href,"jpg") or contains(@href,"youtube") or contains(@href,"youtu.be") or contains(@href,"instagram") or contains(@href,"facebook") or contains(@href,"linkedin") or contains(@href,"tiktok") or contains(@href,"mailto") or contains(@href,"jpeg") or contains(@href,"png") or contains(@href,"mp3") or contains(@href,"twitter") or contains(@href,"x.com") or contains(@href,"google") or contains(@href,"wikipedia"))]')))
             except:
                 continue
             referenceList = set(map(getLinkFromElement, elementList))
             difference = set(linkList)
             referenceList = list(referenceList - difference)
             for item in referenceList:
-                for reject in RejectList:
-                    if reject in item.lower():
-                        referenceList.remove(item)
+                if item is not None:
+                    for reject in RejectList:
+                        if reject in item.lower():
+                            referenceList.remove(item)
+                else:
+                    referenceList.remove(item)
             linkList.extend(referenceList)
             print(f'links novos encontrados:{len(referenceList)} links totais assimilados: {len(linkList)}')
             pageCount = len(linkList) - len(removeList)
             placeholder.markdown(f"### :blue-background[Procurando Páginas: {pageCount + 1}  :mag_right: ]")
     for item in removeList:
-        linkList.remove(item)
+        try:
+            linkList.remove(item)
+        except:
+            continue
     return linkList
 
 def getWebsiteScores(site):
@@ -181,7 +181,7 @@ def getWebsiteScores(site):
         points += result
         count += 1
     WebDriverWait(driver, 0.1)
-    elementList = driver.find_elements(By.XPATH,f'//a[contains(@href, "{site}") or contains(@href, "#/") or contains(@href, "html") or contains(@href, "jsp") or starts-with(@href, "/")]')
+    elementList = driver.find_elements(By.XPATH,f'//a[(contains(@href, "{site}") or contains(@href, "#/") or contains(@href, "jsp") or starts-with(@href, "/")) and not(contains(@href,"jpg") or contains(@href,"youtube") or contains(@href,"youtu.be") or contains(@href,"instagram") or contains(@href,"facebook") or contains(@href,"linkedin") or contains(@href,"tiktok") or contains(@href,"mailto") or contains(@href,"jpeg") or contains(@href,"png") or contains(@href,"mp3") or contains(@href,"twitter") or contains(@href,"x.com") or contains(@href,"google") or contains(@href,"wikipedia"))]')
     print(elementList)
     linkList = list(set(map(getLinkFromElement,elementList)))
     driver.switch_to.window(driver.window_handles[2])
