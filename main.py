@@ -13,7 +13,7 @@ driver.set_window_position(-10000,0)
 driver.set_window_size(1920,1080)
 driver.switch_to.new_window('tab')
 driver.switch_to.new_window('tab')
-ScoresTable = {'Página':[],'Pontuação':[]}
+ScoresTable = {'Página':[],'Pontuação':[], 'Link':[]}
 flag = True
 count, finalScore,pageCount = 0, 0, 0
 placeholder = st.empty()
@@ -23,7 +23,7 @@ scoreList = {}
 infoList = {}
 repeatList = []
 actions = ActionChains(driver)
-def getPageScore(html):
+def getPageScore(html,site = ''):
     practicesList = []
     tableList = []
     info = []
@@ -36,6 +36,7 @@ def getPageScore(html):
     if flag:
         driver.switch_to.window(driver.window_handles[0])
         pyperclip.copy(driver.page_source)
+        site = html
     else:
         pyperclip.copy(html)
     driver.switch_to.window(driver.window_handles[1])
@@ -70,6 +71,7 @@ def getPageScore(html):
             practicesList.append(element.screenshot_as_png)
         if flag:
             ScoresTable['Página'].append('Início')
+            ScoresTable['Link'].append(site)
             imagesList['Início'] = practicesList
             scoreList['Início'] = scoreImage
             overviewList['Início'] = tableList
@@ -81,12 +83,14 @@ def getPageScore(html):
                 repeat = repeatList.count(driver.title) + 1
                 repeatTitle =f'{driver.title}-{repeat}'
                 ScoresTable['Página'].append(repeatTitle)
+                ScoresTable['Link'].append(site)
                 imagesList[repeatTitle] = practicesList
                 scoreList[repeatTitle] = scoreImage
                 overviewList[repeatTitle] = tableList
                 infoList[repeatTitle] = info
             else:
                 ScoresTable['Página'].append(driver.title)
+                ScoresTable['Link'].append(site)
                 imagesList[driver.title] = practicesList
                 scoreList[driver.title] = scoreImage
                 overviewList[driver.title] = tableList
@@ -125,6 +129,8 @@ def searchThroughWebsite(linkList,site):
                 if reject in current_url.lower():
                     removeList.append(link)
                     skip = True
+            if site not in current_url:
+                continue
             if skip:
                 continue
             try:
@@ -196,7 +202,7 @@ def getWebsiteScores(site):
            driver.get(link)
            html = driver.page_source
            AnalyzedSite.markdown(f"### Analisando {link}")
-           result = getPageScore(html)
+           result = getPageScore(html,site=link)
            driver.switch_to.window(driver.window_handles[0])
            unique.append(link)
            if result != 0:
