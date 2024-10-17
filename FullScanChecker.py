@@ -244,7 +244,8 @@ def imageSlider():
 
 def main():
     global placeholder, AnalyzedSite, driver, actions
-    st.title("Verificador de Acessibilidade")
+    st.title("FullScanChecker")
+    st.subheader("Verificador de Acessibilidade")
     message = st.empty()
     message.header("Digite o site a ser analisado")
     AnalyzedSite = st.empty()
