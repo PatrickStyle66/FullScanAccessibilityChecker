@@ -109,8 +109,6 @@ def getLinkFromElement(item):
 
 def searchThroughWebsite(linkList,site):
     global placeholder,pageCount,AnalyzedSite, driver
-    RejectList = ['instagram', 'facebook', 'tiktok', 'youtube', 'youtu.be', '.png', '.jpg','.jpeg',
-                  'linkedin', 'mailto', 'wikipedia', '.pdf', 'twitter','.webp','x.com','google','.mp3']
     removeList = []
     for link in linkList:
         try:
@@ -134,13 +132,6 @@ def searchThroughWebsite(linkList,site):
             referenceList = set(map(getLinkFromElement, elementList))
             difference = set(linkList)
             referenceList = list(referenceList - difference)
-            for item in referenceList:
-                if item is not None:
-                    for reject in RejectList:
-                        if reject in item.lower():
-                            referenceList.remove(item)
-                else:
-                    referenceList.remove(item)
             linkList.extend(referenceList)
             print(f'links novos encontrados:{len(referenceList)} links totais assimilados: {len(linkList)}')
             pageCount = len(linkList) - len(removeList)
@@ -244,7 +235,7 @@ def imageSlider():
 
 def main():
     global placeholder, AnalyzedSite, driver, actions
-    st.title("FullScan Checker")
+    st.title("FullScan Accessibility Checker")
     st.subheader("Verificador de Acessibilidade")
     message = st.empty()
     message.header("Digite o site a ser analisado")
