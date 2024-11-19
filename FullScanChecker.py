@@ -10,7 +10,7 @@ import streamlit as st
 import requests
 
 ScoresTable = {'Página':[],'Pontuação':[], 'Link':[]}
-flag = True
+firstPage = True
 count, finalScore,pageCount = 0, 0, 0
 placeholder = st.empty()
 imagesList = {}
@@ -30,7 +30,7 @@ def getPageScore(html,site = ''):
     HtmlMode.click()
     search = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "html")))
     search.clear()
-    if flag:
+    if firstPage:
         driver.switch_to.window(driver.window_handles[0])
         pyperclip.copy(driver.page_source)
         site = html
@@ -66,7 +66,7 @@ def getPageScore(html,site = ''):
         for element in results:
             actions.move_to_element(element).perform()
             practicesList.append(element.screenshot_as_png)
-        if flag:
+        if firstPage:
             ScoresTable['Página'].append('Início')
             ScoresTable['Link'].append(site)
             imagesList['Início'] = practicesList
@@ -96,7 +96,7 @@ def getPageScore(html,site = ''):
         print(f'score da página: {score}')
         return float(score)
     except Exception as error:
-        if flag:
+        if firstPage:
             return -1
         print(error)
         return 0
@@ -150,7 +150,6 @@ def getWebsiteScores(site):
     global count, finalScore, placeholder, AnalyzedSite, driver
     print("Iniciando Análise...")
 
-    unique = []
     try:
         driver.switch_to.window(driver.window_handles[0])
         driver.get(site)
@@ -168,7 +167,6 @@ def getWebsiteScores(site):
     if result == -1:
         return result
     driver.switch_to.window(driver.window_handles[0])
-    unique.append(site)
     print(result)
     if result != 0:
         ScoresTable['Pontuação'].append(result)
@@ -184,19 +182,17 @@ def getWebsiteScores(site):
     for item in linkList:
        placeholder.markdown(f"### :blue-background[Páginas encontradas: {len(linkList) + 1}     Páginas analisadas: {count} :hourglass_flowing_sand: ]")
        try:
-           global flag
-           flag = False
-           link = item
-           print(link)
-           if link in unique:
+           global firstPage
+           firstPage = False
+           print(item)
+           if item == site:
                continue
            driver.switch_to.window(driver.window_handles[2])
-           driver.get(link)
+           driver.get(item)
            html = driver.page_source
-           AnalyzedSite.markdown(f"### Analisando {link}")
-           result = getPageScore(html,site=link)
+           AnalyzedSite.markdown(f"### Analisando {item}")
+           result = getPageScore(html,site=item)
            driver.switch_to.window(driver.window_handles[0])
-           unique.append(link)
            if result != 0:
                ScoresTable['Pontuação'].append(result)
                print(result)
