@@ -38,7 +38,6 @@ def getPageScore(html,site = ''):
         pyperclip.copy(html)
     driver.switch_to.window(driver.window_handles[1])
     search.send_keys(Keys.CONTROL, 'v')
-    #WebDriverWait(AccessDriver, 60)
     sendButton = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//button[contains(@id,"btn-html")]')))
     sendButton.click()
     try:
