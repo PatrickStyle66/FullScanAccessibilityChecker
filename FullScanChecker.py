@@ -210,7 +210,6 @@ def getWebsiteScores(site):
     print(ScoresTable)
     df = pd.DataFrame(data=ScoresTable)
     df2 = df.dropna()
-    df2.to_csv('WebsiteScores.csv')
     driver.quit()
     return df2
 
