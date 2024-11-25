@@ -43,6 +43,8 @@ def getPageScore(html,site = ''):
     try:
         score = WebDriverWait(driver, 60).until(
             EC.presence_of_element_located((By.TAG_NAME, "svg")))
+        download = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//button[contains(@download,"eval.cs")]')))
+        download.click()
         scoreImage = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//div[contains(@class,"d-flex flex-row mt-5 mb-5 justify-content-between container_uri_chart")]')))
         actions.move_to_element(scoreImage).perform()
         scoreImage = scoreImage.screenshot_as_png
@@ -240,7 +242,17 @@ def main():
     site = AnalyzedSite.text_input("ex: https://site .com .br")
     print(site)
     if site and site != '':
-        driver = webdriver.Edge()
+        directoryname = site.split('.')[1]
+        myprofile = webdriver.FirefoxOptions()
+        myprofile.set_preference('browser.download.dir', f'C:/Users/jpham/Downloads/{directoryname}')
+        myprofile.set_preference('browser.download.folderList', 2)
+        myprofile.set_preference('pdfjs.migrationVersion', 1)
+        myprofile.set_preference("browser.preferences.instantApply", True)
+        myprofile.set_preference("browser.helperApps.neverAsk.saveToDisk",
+                          "text/plain, application/octet-stream, application/binary, text/csv, application/csv, application/excel, text/comma-separated-values, text/xml, application/xml")
+        myprofile.set_preference("browser.helperApps.alwaysAsk.force", False)
+        myprofile.set_preference("browser.download.manager.showWhenStarting", False)
+        driver = webdriver.Firefox(options=myprofile)
         driver.set_window_position(-10000, 0)
         driver.set_window_size(1920, 1080)
         driver.switch_to.new_window('tab')
