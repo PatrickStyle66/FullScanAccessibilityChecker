@@ -8,7 +8,6 @@ from selenium.webdriver.common.action_chains import ActionChains
 import pyperclip
 import streamlit as st
 import requests
-
 ScoresTable = {'Página':[],'Pontuação':[], 'Link':[]}
 firstPage = True
 count, finalScore,pageCount = 0, 0, 0
@@ -210,6 +209,7 @@ def getWebsiteScores(site):
     print(ScoresTable)
     df = pd.DataFrame(data=ScoresTable)
     df2 = df.dropna()
+    df2.to_csv(f"{site.split('.')[1]}.csv")
     driver.quit()
     return df2
 
