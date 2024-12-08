@@ -129,11 +129,11 @@ def searchThroughWebsite(linkList,site):
                     EC.presence_of_all_elements_located((By.XPATH,queryString(site))))
             except:
                 continue
-            referenceList = set(map(getLinkFromElement, elementList))
-            difference = set(linkList)
-            referenceList = list(referenceList - difference)
-            linkList.extend(referenceList)
-            print(f'links novos encontrados:{len(referenceList)} links totais assimilados: {len(linkList)}')
+            FoundLinks = set(map(getLinkFromElement, elementList))
+            linkSet = set(linkList)
+            FoundLinks = list(FoundLinks - linkSet)
+            linkList.extend(FoundLinks)
+            print(f'links novos encontrados:{len(FoundLinks)} links totais assimilados: {len(linkList)}')
             pageCount = len(linkList) - len(removeList)
             placeholder.markdown(f"### :blue-background[Procurando Páginas: {pageCount + 1}  :mag_right: ]")
     for item in removeList:
