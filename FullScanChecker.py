@@ -106,7 +106,7 @@ def getLinkFromElement(item):
         pass
 
 def queryString(site):
-    return f'//a[(contains(@href, "{site}") or contains(@href, "#/") or contains(@href, "jsp") or starts-with(@href, "/")) and not(contains(@href,"jpg") or contains(@href,"youtube") or contains(@href,"youtu.be") or contains(@href,"instagram") or contains(@href,"facebook") or contains(@href,"linkedin") or contains(@href,"tiktok") or contains(@href,"mailto") or contains(@href,"jpeg") or contains(@href,"png") or contains(@href,"mp3") or contains(@href,"twitter") or contains(@href,"x.com") or contains(@href,"google") or contains(@href,"wikipedia") or contains(@href,"pdf") or contains(@href,"JPEG") or contains(@href,"PNG")or contains(@href,"JPG") or contains(@href,"PDF"))]'
+    return f'//a[(contains(@href, "{site}") or starts-with(@href, "/") or starts-with(@href, "#")) and not(contains(@href,"jpg") or contains(@href,"youtube") or contains(@href,"youtu.be") or contains(@href,"instagram") or contains(@href,"facebook") or contains(@href,"linkedin") or contains(@href,"tiktok") or contains(@href,"mailto") or contains(@href,"jpeg") or contains(@href,"png") or contains(@href,"mp3") or contains(@href,"twitter") or contains(@href,"x.com") or contains(@href,"google") or contains(@href,"wikipedia") or contains(@href,"pdf") or contains(@href,"JPEG") or contains(@href,"PNG")or contains(@href,"JPG") or contains(@href,"PDF"))]'
 
 def searchThroughWebsite(linkList,site):
     global placeholder,pageCount,AnalyzedSite, driver
@@ -125,7 +125,7 @@ def searchThroughWebsite(linkList,site):
                 continue
             try:
                 AnalyzedSite.markdown(f"### procurando mais páginas em {link}")
-                elementList = WebDriverWait(driver, 0.1).until(
+                elementList = WebDriverWait(driver, 0.5).until(
                     EC.presence_of_all_elements_located((By.XPATH,queryString(site))))
             except:
                 continue
