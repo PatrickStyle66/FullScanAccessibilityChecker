@@ -8,13 +8,8 @@ from selenium.webdriver.common.action_chains import ActionChains
 import pyperclip
 import streamlit as st
 import requests
-driver = webdriver.Edge()
-driver.set_window_position(-10000,0)
-driver.set_window_size(1920,1080)
-driver.switch_to.new_window('tab')
-driver.switch_to.new_window('tab')
-ScoresTable = {'Página':[],'Pontuação':[]}
-flag = True
+ScoresTable = {'Página':[],'Pontuação':[], 'Link':[]}
+firstPage = True
 count, finalScore,pageCount = 0, 0, 0
 placeholder = st.empty()
 imagesList = {}
@@ -22,9 +17,9 @@ overviewList= {}
 scoreList = {}
 infoList = {}
 repeatList = []
-actions = ActionChains(driver)
-def getPageScore(html):
-    global Screenshots
+
+def getPageScore(html,site = ''):
+    global driver, actions
     practicesList = []
     tableList = []
     info = []
@@ -34,14 +29,14 @@ def getPageScore(html):
     HtmlMode.click()
     search = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "html")))
     search.clear()
-    if flag:
+    if firstPage:
         driver.switch_to.window(driver.window_handles[0])
         pyperclip.copy(driver.page_source)
+        site = html
     else:
         pyperclip.copy(html)
     driver.switch_to.window(driver.window_handles[1])
     search.send_keys(Keys.CONTROL, 'v')
-    #WebDriverWait(AccessDriver, 60)
     sendButton = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//button[contains(@id,"btn-html")]')))
     sendButton.click()
     try:
@@ -69,8 +64,9 @@ def getPageScore(html):
         for element in results:
             actions.move_to_element(element).perform()
             practicesList.append(element.screenshot_as_png)
-        if flag:
+        if firstPage:
             ScoresTable['Página'].append('Início')
+            ScoresTable['Link'].append(site)
             imagesList['Início'] = practicesList
             scoreList['Início'] = scoreImage
             overviewList['Início'] = tableList
@@ -82,12 +78,14 @@ def getPageScore(html):
                 repeat = repeatList.count(driver.title) + 1
                 repeatTitle =f'{driver.title}-{repeat}'
                 ScoresTable['Página'].append(repeatTitle)
+                ScoresTable['Link'].append(site)
                 imagesList[repeatTitle] = practicesList
                 scoreList[repeatTitle] = scoreImage
                 overviewList[repeatTitle] = tableList
                 infoList[repeatTitle] = info
             else:
                 ScoresTable['Página'].append(driver.title)
+                ScoresTable['Link'].append(site)
                 imagesList[driver.title] = practicesList
                 scoreList[driver.title] = scoreImage
                 overviewList[driver.title] = tableList
@@ -96,6 +94,8 @@ def getPageScore(html):
         print(f'score da página: {score}')
         return float(score)
     except Exception as error:
+        if firstPage:
+            return -1
         print(error)
         return 0
 
@@ -105,41 +105,49 @@ def getLinkFromElement(item):
     except:
         pass
 
+def queryString(site):
+    return f'//a[(contains(@href, "{site}") or starts-with(@href, "/") or starts-with(@href, "#")) and not(contains(@href,"jpg") or contains(@href,"youtube") or contains(@href,"youtu.be") or contains(@href,"instagram") or contains(@href,"facebook") or contains(@href,"linkedin") or contains(@href,"tiktok") or contains(@href,"mailto") or contains(@href,"jpeg") or contains(@href,"png") or contains(@href,"mp3") or contains(@href,"twitter") or contains(@href,"x.com") or contains(@href,"google") or contains(@href,"wikipedia") or contains(@href,"pdf") or contains(@href,"JPEG") or contains(@href,"PNG")or contains(@href,"JPG") or contains(@href,"PDF"))]'
+
 def searchThroughWebsite(linkList,site):
-    global placeholder,pageCount
-    RejectList = ['instagram', 'facebook', 'tiktok', 'youtube', 'youtu.be', 'cadastro.museus.gov.br',
-                   'museus.cultura.gov.br', '.png', '.jpg', 'linkedin', 'mailto', 'wikipedia', '.pdf', 'twitter','.webp']
+    global placeholder,pageCount,AnalyzedSite, driver
+    removeList = []
     for link in linkList:
         try:
             req = requests.get(link)
+            print(req.status_code)
         except:
             continue
         if req.status_code == 200 and link != site:
             driver.get(link)
+            current_url = driver.current_url
+            if site not in current_url:
+                removeList.append(link)
+                continue
             try:
-                elementList = WebDriverWait(driver, 1).until(
-                    EC.presence_of_all_elements_located((By.XPATH,
-                                                         f'//a[contains(@href, "{site}") or contains(@href, "#/") or contains(@href, "jsp") or starts-with(@href, "/")]')))
+                AnalyzedSite.markdown(f"### procurando mais páginas em {link}")
+                elementList = WebDriverWait(driver, 0.5).until(
+                    EC.presence_of_all_elements_located((By.XPATH,queryString(site))))
             except:
                 continue
-            referenceList = set(map(getLinkFromElement, elementList))
-            difference = set(linkList)
-            referenceList = list(referenceList - difference)
-            for item in referenceList:
-                for reject in RejectList:
-                    if reject in item.lower():
-                        referenceList.remove(item)
-            linkList.extend(referenceList)
-            print(f'links encontrados:{len(referenceList)} links assimilados: {len(linkList)}')
-            pageCount = len(linkList)
-            placeholder.markdown(f"### :blue-background[Páginas encontradas: {pageCount + 1}     Páginas analisadas: {count} :hourglass_flowing_sand: ]")
+            FoundLinks = set(map(getLinkFromElement, elementList))
+            linkSet = set(linkList)
+            FoundLinks = list(FoundLinks - linkSet)
+            linkList.extend(FoundLinks)
+            print(f'links novos encontrados:{len(FoundLinks)} links totais assimilados: {len(linkList)}')
+            pageCount = len(linkList) - len(removeList)
+            placeholder.markdown(f"### :blue-background[Procurando Páginas: {pageCount + 1}  :mag_right: ]")
+    for item in removeList:
+        try:
+            linkList.remove(item)
+        except:
+            continue
     return linkList
 
+
 def getWebsiteScores(site):
-    global count, finalScore, placeholder
+    global count, finalScore, placeholder, AnalyzedSite, driver
     print("Iniciando Análise...")
 
-    unique = []
     try:
         driver.switch_to.window(driver.window_handles[0])
         driver.get(site)
@@ -147,40 +155,42 @@ def getWebsiteScores(site):
         print(f'domínio real: {site}')
     except:
         print("Site não encontrado.")
+        AnalyzedSite.markdown("### Site não encontrado, Recarregue a página e tente novamente")
         driver.quit()
         return
 
     points = 0
+    AnalyzedSite.markdown(f"### Analisando página inicial {site}")
     result = getPageScore(site)
+    if result == -1:
+        return result
     driver.switch_to.window(driver.window_handles[0])
-    unique.append(site)
     print(result)
     if result != 0:
         ScoresTable['Pontuação'].append(result)
         points += result
         count += 1
     WebDriverWait(driver, 0.1)
-    elementList = driver.find_elements(By.XPATH,f'//a[contains(@href, "{site}") or contains(@href, "#/") or contains(@href, "html") or contains(@href, "jsp") or starts-with(@href, "/")]')
+    elementList = driver.find_elements(By.XPATH, queryString(site))
     print(elementList)
     linkList = list(set(map(getLinkFromElement,elementList)))
     driver.switch_to.window(driver.window_handles[2])
     linkList = searchThroughWebsite(linkList,site)
     driver.switch_to.window(driver.window_handles[0])
     for item in linkList:
-       placeholder.markdown(f"### :blue-background[Páginas encontradas: {pageCount + 1}     Páginas analisadas: {count} :hourglass_flowing_sand: ]")
+       placeholder.markdown(f"### :blue-background[Páginas encontradas: {len(linkList) + 1}     Páginas analisadas: {count} :hourglass_flowing_sand: ]")
        try:
-           global flag
-           flag = False
-           link = item
-           print(link)
-           if link in unique:
+           global firstPage
+           firstPage = False
+           print(item)
+           if item == site:
                continue
            driver.switch_to.window(driver.window_handles[2])
-           driver.get(link)
+           driver.get(item)
            html = driver.page_source
-           result = getPageScore(html)
+           AnalyzedSite.markdown(f"### Analisando {item}")
+           result = getPageScore(html,site=item)
            driver.switch_to.window(driver.window_handles[0])
-           unique.append(link)
            if result != 0:
                ScoresTable['Pontuação'].append(result)
                print(result)
@@ -199,13 +209,12 @@ def getWebsiteScores(site):
     print(ScoresTable)
     df = pd.DataFrame(data=ScoresTable)
     df2 = df.dropna()
-    df2.to_csv('WebsiteScores.csv')
+    df2.to_csv(f"{site.split('.')[1]}.csv")
     driver.quit()
     return df2
 
 @st.fragment
 def imageSlider():
-    global Screenshots
     sliderPlaceholder = st.empty()
     with sliderPlaceholder.container():
         image = st.selectbox("Página", imagesList.keys())
@@ -222,26 +231,40 @@ def imageSlider():
 
 
 def main():
-    global placeholder
-    st.title("Verificador de Acessibilidade")
-    st.header("Digite o site a ser analisado")
-    site = st.text_input("ex: https://site .com .br")
+    global placeholder, AnalyzedSite, driver, actions
+    st.title("FullScan Accessibility Checker")
+    st.subheader("Verificador de Acessibilidade")
+    message = st.empty()
+    message.header("Digite o site a ser analisado")
+    AnalyzedSite = st.empty()
+    site = AnalyzedSite.text_input("ex: https://site .com .br")
     print(site)
     if site and site != '':
+        driver = webdriver.Edge()
+        driver.set_window_position(-10000, 0)
+        driver.set_window_size(1920, 1080)
+        driver.switch_to.new_window('tab')
+        driver.switch_to.new_window('tab')
+        actions = ActionChains(driver)
         with st.spinner("Analisando Páginas...  "):
             results = getWebsiteScores(site)
-            if count > 0:
-                st.header(f"Páginas Totais Analisadas: {count} :white_check_mark:")
-            if finalScore != 0:
-                if finalScore >= 8:
-                    st.header(f"Média geral: :green[{finalScore:.2f}]")
-                elif finalScore >= 6:
-                    st.header(f"Média geral: :orange[{finalScore:.2f}]")
-                else:
-                    st.header(f"Média geral: :red[{finalScore:.2f}]")
-                st.write(results)
-                placeholder.empty()
-                st.header("Relatório por página")
+            if results is int:
+                st.header('Não foi possível analisar o site devido a um erro no access monitor. Recarregue a página e tente outro site')
+            else:
+                if count > 0:
+                    st.header(f"Páginas Totais Analisadas: {count} :white_check_mark:")
+                if finalScore != 0:
+                    if finalScore >= 8:
+                        st.header(f"Média geral: :green[{finalScore:.2f}]")
+                    elif finalScore >= 6:
+                        st.header(f"Média geral: :orange[{finalScore:.2f}]")
+                    else:
+                        st.header(f"Média geral: :red[{finalScore:.2f}]")
+                    st.write(results)
+                    placeholder.empty()
+                    message.header("Recarregue a página para uma nova consulta")
+                    AnalyzedSite.empty()
+                    st.header("Relatório por página")
 
     if imagesList:
         imageSlider()
